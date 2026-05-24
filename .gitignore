@@ -1,0 +1,34 @@
+# Python 通用
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+
+# 虚拟环境
+venv/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+.history/
+
+# 大文件 / 模型
+*.whl
+*.pt
+*.ckpt
+*.parquet
+
+# 训练产物
+wandb/
+outputs/
+checkpoints/
+log/
+logs/
+*.log
+
+# OS
+.DS_Store

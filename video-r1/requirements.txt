@@ -1,0 +1,6 @@
+# Video-R1 在 verl 之外的额外依赖
+# verl 自己的 requirements.txt 在 verl-main/requirements.txt
+qwen-vl-utils
+decord
+nltk
+rouge-score

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/ray/session_2026-05-01_15-40-03_398400_2103880/logs/**)",
+      "Read(//tmp/ray/session_latest/logs/**)",
+      "Bash(dmesg)",
+      "Bash(journalctl --since \"5 hours ago\")",
+      "Bash(python3 -c \"import pandas as pd; df = pd.read_parquet\\('/data/zyt/LLM/data/gsm8k/train.parquet'\\); print\\(f'rows: {len\\(df\\)}, batch=512 → steps/epoch: {len\\(df\\)//512}, *30 = {\\(len\\(df\\)//512\\)*30}'\\)\")",
+      "Bash(/home/zyt/miniconda3/envs/verl/bin/python -c \"import pandas as pd; df = pd.read_parquet\\('/data/zyt/LLM/data/gsm8k/train.parquet'\\); print\\(f'rows: {len\\(df\\)}, batch=512 → steps/epoch: {len\\(df\\)//512}, *30 = {\\(len\\(df\\)//512\\)*30}'\\)\")",
+      "Bash(/home/zyt/miniconda3/envs/verl/bin/python -c ' *)",
+      "Read(//data/zyt/LLM/data/gsm8k/**)",
+      "Bash(kill %1)",
+      "Bash(jobs)",
+      "Bash(/home/zyt/miniconda3/envs/verl/bin/python -c \"from ray._private.runtime_env.constants import RAY_JOB_CONFIG_JSON_ENV_VAR; print\\(repr\\(RAY_JOB_CONFIG_JSON_ENV_VAR\\)\\)\")"
+    ]
+  }
+}
