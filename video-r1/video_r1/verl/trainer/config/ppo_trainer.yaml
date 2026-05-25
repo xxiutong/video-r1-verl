@@ -4,6 +4,13 @@
 # 3. Inline comments (after a field on the same line) are not allowed.
 # 4. Indentation level is respected for nested fields.
 
+# Tell Hydra to ALSO look in verl-main's config directory for sub-configs
+# (our copy of ppo_trainer.yaml is "primary" but it references many sub-yamls like
+# distillation/distillation, model_engine/dp, actor/dp_actor 等 — those live in verl-main)
+hydra:
+  searchpath:
+    - file:///data/zyt/LLM1/video-r1-verl/verl-main/verl/trainer/config
+
 # specify the default per-component configs
 defaults:
 

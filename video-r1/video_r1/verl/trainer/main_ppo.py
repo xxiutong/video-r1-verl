@@ -37,6 +37,11 @@ from verl.utils.config import validate_config
 
 from video_r1.verl.trainer.ppo.video_ray_trainer import VideoR1RayPPOTrainer
 
+# 副作用 import:让 @register("video_r1_shuffled_agent") 在 agent loop 注册表里登记
+# Phase 2 在 fit() 里把 batch.non_tensor_batch["agent_name"] 切到 "video_r1_shuffled_agent"
+# 来触发 T-GRPO 的打乱-帧 rollout
+from video_r1.verl.experimental.agent_loop import video_r1_agent_loop  # noqa: F401
+
 
 class VideoR1TaskRunner(TaskRunner):
     """Video-R1 自定义 TaskRunner。
