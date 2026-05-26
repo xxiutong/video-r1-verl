@@ -8,6 +8,10 @@ set -x
 # trainer.n_gpus_per_node 仍设 4(对应逻辑卡数)
 export CUDA_VISIBLE_DEVICES=0,2,3,4
 
+# 强制离线模式,避免 transformers/HF Hub 偷偷尝试联网(已通过 modelscope 离线下完)
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+
 ENGINE=${1:-vllm}
 
 # === 路径 ===
@@ -17,15 +21,15 @@ TRAIN_FILE=$DATA_ROOT/Video-R1-260k-local.json
 VAL_FILE=$DATA_ROOT/Video-R1-260k-local.json
 
 VIDEO_R1_HOME=/data/zyt/LLM1/video-r1-verl/video-r1
-DATASET_CLS_PATH=$VIDEO_R1_HOME/video_r1/verl/utils/dataset/my_rl_dataset.py
+# VideoR1Dataset 在 main_ppo.py 里静态 import,不走 verl 的 data.custom_cls 路径
 REWARD_FN_PATH=$VIDEO_R1_HOME/video_r1/verl/utils/reward_score/video_r1.py
 
 # 让 Python 能 import 到 video_r1 包(verl 假设已在环境里)
 export PYTHONPATH=$VIDEO_R1_HOME:$PYTHONPATH
 
 # === 模型 ===
-# 用 Video-R1 论文的 SFT 冷启动模型;HF 上没下到本地可以先填本地路径
-MODEL_PATH=${MODEL_PATH:-Video-R1/Qwen2.5-VL-7B-COT-SFT}
+# Video-R1 论文的 SFT 冷启动模型,本地路径(从 modelscope 离线下载)
+MODEL_PATH=${MODEL_PATH:-/home/zyt/.cache/modelscope/hub/models/Video-R1/Qwen2.5-VL-7B-COT-SFT}
 
 # === 启动 ===
 python3 -m video_r1.verl.trainer.main_ppo \
@@ -45,8 +49,6 @@ python3 -m video_r1.verl.trainer.main_ppo \
     data.truncation='error' \
     data.image_key=images \
     data.video_key=videos \
-    data.custom_cls.path=$DATASET_CLS_PATH \
-    data.custom_cls.name=VideoR1Dataset \
     \
     custom_reward_function.path=$REWARD_FN_PATH \
     custom_reward_function.name=compute_score \
@@ -61,12 +63,12 @@ python3 -m video_r1.verl.trainer.main_ppo \
     actor_rollout_ref.actor.kl_loss_coef=0.04 \
     actor_rollout_ref.actor.kl_loss_type=low_var_kl \
     actor_rollout_ref.actor.entropy_coeff=0 \
-    actor_rollout_ref.actor.fsdp_config.param_offload=False \
-    actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
+    actor_rollout_ref.actor.fsdp_config.param_offload=True \
+    actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
     \
     actor_rollout_ref.rollout.name=$ENGINE \
     actor_rollout_ref.rollout.tensor_model_parallel_size=2 \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=0.4 \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.n=8 \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=2 \

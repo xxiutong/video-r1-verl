@@ -28,7 +28,6 @@ import ray
 
 from verl.trainer.main_ppo import (
     TaskRunner,
-    create_rl_dataset,
     create_rl_sampler,
     run_ppo,
 )
@@ -36,6 +35,11 @@ from verl.trainer.ppo.utils import need_critic, need_reference_policy
 from verl.utils.config import validate_config
 
 from video_r1.verl.trainer.ppo.video_ray_trainer import VideoR1RayPPOTrainer
+# 静态 import VideoR1Dataset,避免走 verl 的 data.custom_cls 路径
+# (custom_cls 用 importlib.util.spec_from_file_location 动态加载,模块名是
+#  custom_module_xxx,multiprocessing worker 反序列化时找不到该模块,
+#  导致继承自 RLHFDataset 的 _build_messages 等方法丢失。参考 RM-R1 做法)
+from video_r1.verl.utils.dataset.my_rl_dataset import VideoR1Dataset
 
 # 副作用 import:让 @register("video_r1_shuffled_agent") 在 agent loop 注册表里登记
 # Phase 2 在 fit() 里把 batch.non_tensor_batch["agent_name"] 切到 "video_r1_shuffled_agent"
@@ -107,20 +111,20 @@ class VideoR1TaskRunner(TaskRunner):
         from verl.utils.dataset.rl_dataset import collate_fn
 
         # Create training and validation datasets.
-        train_dataset = create_rl_dataset(
-            config.data.train_files,
-            config.data,
-            tokenizer,
-            processor,
-            is_train=True,
+        # 静态实例化(对应 RM-R1 风格):类的 __module__ 是正常 Python 包路径,
+        # multiprocessing worker 可以正常 import,pickle/unpickle 不丢继承链
+        train_dataset = VideoR1Dataset(
+            data_files=config.data.train_files,
+            tokenizer=tokenizer,
+            processor=processor,
+            config=config.data,
             max_samples=config.data.get("train_max_samples", -1),
         )
-        val_dataset = create_rl_dataset(
-            config.data.val_files,
-            config.data,
-            tokenizer,
-            processor,
-            is_train=False,
+        val_dataset = VideoR1Dataset(
+            data_files=config.data.val_files,
+            tokenizer=tokenizer,
+            processor=processor,
+            config=config.data,
             max_samples=config.data.get("val_max_samples", -1),
         )
         train_sampler = create_rl_sampler(config.data, train_dataset)
